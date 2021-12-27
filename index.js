@@ -1,17 +1,17 @@
 const express = require('express')
 const { Router } = express
 const Contenedor = require('./Contenedor.js')
-const fs = require('fs')
+const { options } = require('./DB/MariaDB')
 
 const { Server: HttpServer } = require('http')
 const { Server: IOServer } = require('socket.io')
-const moment = require('moment')
-const { fstat } = require('fs')
 
 const app = express()
 const router = Router()
 
-let seeProducts = new Contenedor('productos')
+
+
+let seeProducts = new Contenedor(options)
 
 //WEBSOCKET
 const httpserver = new HttpServer(app)
@@ -19,6 +19,7 @@ const io = new IOServer(httpserver)
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
+
 app.use('/', express.static(__dirname + '/views'))
 app.use('/public', express.static(__dirname + '/public'))
 
@@ -49,7 +50,8 @@ router.get('/', (req, res) => {
     let data
     (async function getData () {
         data = await seeProducts.getAll()
-        res.render('index', {title: 'Coderhouse', data: data})
+        res.send(data)
+        // res.render('index', {title: 'Coderhouse', data: data})
     })()
 })
 
@@ -81,11 +83,17 @@ router.delete('/:id', async (req, res) => {
     }
 })
 
+router.delete('/', async (req, res) => {
+    const result = await seeProducts.deleteAll()
+    res.send(result)
+})
+
+
 router.put('/:id', async (req, res) => {
     const id = req.params.id
     const result = await seeProducts.update(id, req.body)
     
-    result != null ? res.send("Producto actualizado") : res.send({ error : 'producto no encontrado' })
+    result == 1 ? res.send("Producto actualizado") : res.send({ error : 'producto no encontrado' })
 })
 
 app.use('/api/productos', router)
