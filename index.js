@@ -11,7 +11,7 @@ const router = Router()
 
 
 
-let seeProducts = new Contenedor(options)
+let seeProducts = new Contenedor(options, 'products')
 
 //WEBSOCKET
 const httpserver = new HttpServer(app)
@@ -31,12 +31,14 @@ io.on('connection', socket => {
     socket.emit('back', clientMessages)
 
     socket.on('newProduct', () => {
-        let data
-        (async function getData () {
-            data = await seeProducts.getAll()
+        (async function () {
+            let data = await seeProducts.getAll()
             const lastItem = data.length - 1
             io.sockets.emit('new-product-emition', data[lastItem])
+            io.sockets.emit(data)
         })()
+
+
     })
     
     socket.on('notification', data => {
@@ -47,17 +49,11 @@ io.on('connection', socket => {
 
 //RUTAS
 router.get('/', (req, res) => {
-    let data
-    (async function getData () {
-        data = await seeProducts.getAll()
-        res.send(data)
-        // res.render('index', {title: 'Coderhouse', data: data})
+    (async function () {
+        let data = await seeProducts.getAll()
+        res.render('index', {title: 'Coderhouse', data: data})       
     })()
 })
-
-// router.get('/new-product', (req, res) => {
-//     res.render('newProduct', {title: "Ingresar nuevo producto"})
-// })
 
 router.get('/:id', async (req, res) => {
     let result = await seeProducts.getById(req.params.id)
@@ -87,7 +83,6 @@ router.delete('/', async (req, res) => {
     const result = await seeProducts.deleteAll()
     res.send(result)
 })
-
 
 router.put('/:id', async (req, res) => {
     const id = req.params.id

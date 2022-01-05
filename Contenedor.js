@@ -1,26 +1,24 @@
 const { default: knex } = require('knex')
 
 class Contenedor {
-    constructor (options) {
+    constructor (options, table) {
         this.options = options
+        this.table = table
+        this.knex = require('knex')(options)
     }
 
     async getAll() {
-        const knex = require('knex')(this.options)
         try {
-            const rows = await knex.from(this.options.table).select("*")
+            const rows = await this.knex.from(this.table).select("*")
             return rows
         } catch(err) { 
             console.log(err)
-        } finally {
-            knex.destroy()
         }
     }
 
     async getById(number) {
-        const knex = require('knex')(this.options)
         try {
-            let data = await knex.from(this.options.table).where('id', number).select('*')
+            let data = await this.knex.from(this.table).where('id', number).select('*')
             if(data.length > 0) {
                 return data[0]
             } else {
@@ -28,56 +26,41 @@ class Contenedor {
             }    
         } catch(err) {
             console.log(err)
-        } finally {
-            knex.destroy()
         }
     }
 
     async save(newItem) {
-        const knex = require('knex')(this.options)
         try {
-            const task = await knex.from(this.options.table).insert(newItem)
+            const task = await this.knex.from(this.table).insert(newItem)
             return task[0]
         } catch (err) {
-            console.log('save', err)
-        } finally {
-            knex.destroy()
+            console.log("save", err)
         }
     }
 
     async deleteById(number) {
-        const knex = require('knex')(this.options)
-
         try {
-            await knex.from(this.options.table).where('id', number).del()
+            await this.knex.from(this.table).where('id', number).del()
         } catch(err) {
             console.log(err)
-        } finally {
-            knex.destroy()
         }
     }
 
     async deleteAll() {
-        const knex = require('knex')(this.options)
         try {
-            await knex.from(this.options.table).del()
+            await this.knex.from(this.table).del()
             return {'status': 'datos eliminados'}
         } catch(err) {
             console.log(err)
-        } finally {
-            knex.destroy()
         }
     }
 
     async update(id, obj) {
-        const knex = require('knex')(this.options)
         try {
-            const modified = await knex.from(this.options.table).where('id', id).update(obj)
+            const modified = await this.knex.from(this.table).where('id', id).update(obj)
             return modified
         } catch(err) {
             console.log(err)
-        } finally {
-            knex.destroy()
         }
     }
 
